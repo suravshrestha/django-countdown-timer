@@ -1,0 +1,63 @@
+{% extends 'app/base.html' %} 
+
+{% block content %}
+    {% if not objs.count %}
+        No countdowns were created!<br>
+
+        Go to the <a href={% url 'admin:app_counter_add' %}>admin panel</a> to create countdown for events        
+    {% else %}
+        {% for obj in objs  %}
+            <h2>Countdowns created in the admin panel:</h2>
+
+            <div class="countdown">
+                <h3 class="countdown-title-{{ obj.pk }}">{{ obj }}</h3>
+
+                <div class="countdown-status-{{ obj.pk }}">
+                    <span id="days"></span> Day
+                    <span id="hours"></span> Hours
+                    <span id="minutes"></span> Minutes
+                    <span id="seconds"></span> Seconds
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <script>
+        makeTimer = (endTimeSeconds, pk)=> {
+            let endTime = new Date(endTimeSeconds * 1000);
+            endTime = (Date.parse(endTime) / 1000);
+
+            let now = new Date();
+            now = (Date.parse(now) / 1000);
+
+            let timeLeft = endTime - now;
+
+            if (timeLeft <= 0){
+                document.querySelector(`.countdown-status-${pk}`).textContent = "CLOSED!"
+
+                return;
+            }
+
+            let days = Math.floor(timeLeft / 86400);
+            let hours = Math.floor((timeLeft - (days * 86400)) / 3600);
+            let minutes = Math.floor((timeLeft - (days * 86400) - (hours * 3600 )) / 60);
+            let seconds = Math.floor((timeLeft - (days * 86400) - (hours * 3600) - (minutes * 60)));
+
+            if (hours < "10") { hours = "0" + hours; }
+            if (minutes < "10") { minutes = "0" + minutes; }
+            if (seconds < "10") { seconds = "0" + seconds; }
+
+            countdownStatus = document.querySelector(`.countdown-status-${pk}`)
+
+            countdownStatus.querySelector("#days").textContent = days;
+            countdownStatus.querySelector("#hours").textContent = hours;
+            countdownStatus.querySelector("#minutes").textContent = minutes;
+            countdownStatus.querySelector("#seconds").textContent = seconds;
+        }
+
+        // Call makeTimer in each interval of 1 second
+        {% for obj in objs %}
+            setInterval(() => makeTimer("{{ obj.date|date:'U' }}", {{ obj.pk }}), 1000);
+        {% endfor %}
+    </script>
+{% endblock content %}
